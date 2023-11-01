@@ -1,103 +1,51 @@
 <template>
-  <div id="task-form">
-    <form @submit.prevent="handleSubmit">
-      <label>Title</label>
-      <input
-        ref="first"
-        type="text"
-        :class="{ 'has-error': submitting && isNameValid }"
-        v-model="task.name"
-        @focus="clearStatus"
-        @keypress="clearStatus"
-      />
-      <label>Description</label>
-      <input
-        type="text"
-        :class="{ 'has-error': submitting && isEmailValid }"
-        v-model="task.email"
-        @focus="clearStatus"
-      />
-      <p v-if="error && submitting" class="error-message">
-        ❗Please fill out all required fields and valid email address
-      </p>
-      <p v-if="success" class="success-message">
-        ✅ Task successfully added
-      </p>
-      <button>Add Task</button>
-    </form>
-  </div>
+  <form
+    @submit.prevent="addItemAndClear(todo)"
+    class="items-center gap-x-3 space-y-3 sm:flex sm:space-y-0 md:block md:space-y-3"
+    role="form"
+    aria-label="Add To-Do"
+  >
+    <label class="sr-only" for="todo">To-Do name</label>
+    <input
+      v-model="todo"
+      type="text"
+      aria-label="todo"
+      placeholder="To-Do name"
+      class="input"
+      required
+    />
+    <button class="button" type="submit">Add To-Do</button>
+  </form>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { ref, defineComponent } from "vue";
+import { useTodoListStore } from "../stores/todoList";
+export default defineComponent({
   name: "TodoForm",
-  data() {
-    return {
-      submitting: false,
-      error: false,
-      success: false,
-      task: {
-        name: "",
-        email: "",
-        completed: false,
-      },
-    };
-  },
-  methods: {
-    handleSubmit() {
-      this.submitting = true;
-      this.clearStatus();
-
-      if (this.isNameValid || this.isEmailValid) {
-        this.error = true;
+  setup() {
+    const todo = ref("");
+    const store = useTodoListStore();
+    function addItemAndClear(title: string) {
+      if (title.length === 0) {
         return;
       }
-
-      this.$emit("addTask", this.task);
-      this.$refs.first.focus();
-      this.task = {
-        name: "",
-        email: "",
-      };
-      this.error = false;
-      this.success = true;
-      setTimeout(() => {
-        this.success = false;
-      }, 3000);
-      this.submitting = false;
-    },
-
-    clearStatus() {
-      this.success = false;
-      this.error = false;
-    },
+      store.addTodoItem(title);
+      todo.value = "";
+    }
+    return { todo, addItemAndClear };
   },
-
-  computed: {
-    isNameValid() {
-      return this.task.name === "";
-    },
-    isEmailValid() {
-      return this.task.email === "";
-    },
-  },
-};
+});
 </script>
 
-<style scoped>
-form {
-  margin-bottom: 2rem;
+<style lang="postcss" scoped>
+.todo-form {
+  @apply mb-4 rounded bg-white px-8 pt-6 pb-8 shadow-md;
 }
-
-[class*="-message"] {
-  font-weight: 500;
+.input {
+  @apply block w-full rounded-lg border bg-transparent py-3 px-4 shadow-sm outline-none focus:border-indigo-600;
 }
-
-.error-message {
-  color: #d33c40;
-}
-
-.success-message {
-  color: #32a95d;
+.button {
+  @apply block w-full rounded-lg bg-indigo-600 py-3 px-4 text-center text-sm font-medium text-white shadow hover:bg-indigo-500 active:bg-indigo-700 active:shadow-none sm:w-auto md:w-full;
 }
 </style>
